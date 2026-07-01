@@ -5,7 +5,7 @@
 /* 1) PASTE YOUR GOOGLE APPS SCRIPT WEB-APP URL HERE
    (see README.md → "Setting up the overview"). Looks like:
    https://script.google.com/macros/s/AKfyc..../exec              */
-const SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywwihkau8iVyelj_-Bpf9_vBuPwMO0FZT3c0bzZXWiu3z8UBWfL07uqIfES4doZ6s8/exec";
 
 /* how many times the "no" button dodges before it lets itself be caught */
 const DODGES_TO_CATCH = 6;

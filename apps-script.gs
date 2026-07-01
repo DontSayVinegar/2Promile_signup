@@ -1,9 +1,7 @@
-/**
- * běhna 2‰ — signup collector
- * Paste this into the Apps Script editor of a Google Sheet
- * (Extensions → Apps Script), then Deploy → New deployment → Web app.
- * See README.md for the full step-by-step.
- */
+// behna 2 promile - signup collector
+// Paste this into the Apps Script editor of a Google Sheet
+// (Extensions -> Apps Script), then Deploy -> New deployment -> Web app.
+// See README.md for the full step-by-step.
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
@@ -13,7 +11,7 @@ function doPost(e) {
 
     // Add a header row the first time.
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["Timestamp", "Jméno", "Odpověď", "User agent"]);
+      sheet.appendRow(["Timestamp", "Jmeno", "Odpoved", "User agent"]);
     }
 
     var data = JSON.parse(e.postData.contents);
@@ -21,7 +19,7 @@ function doPost(e) {
       new Date(),
       String(data.name || "").slice(0, 100),
       String(data.choice || ""),
-      String(data.ua || "").slice(0, 300),
+      String(data.ua || "").slice(0, 300)
     ]);
 
     return ContentService
@@ -36,7 +34,7 @@ function doPost(e) {
   }
 }
 
-// Lets you open the /exec URL in a browser to confirm it's alive.
+// Lets you open the /exec URL in a browser to confirm it is alive.
 function doGet() {
-  return ContentService.createTextOutput("běhna signup endpoint is running.");
+  return ContentService.createTextOutput("behna signup endpoint is running.");
 }
