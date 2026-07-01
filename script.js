@@ -37,55 +37,104 @@ let sending = false;
 /* ============================================================
    The evasive "sorry ale ne" button
    ============================================================ */
-const taunts = [
-  "ne? určitě?",
-  "no tak…",
-  "to myslíš vážně?",
-  "chyť mě jestli to dokážeš",
-  "skoro! ještě kousíček",
-];
+const heading = document.querySelector("#screen-ask .prompt");
+let lastCount = 0; // rate-limits how fast dodges are tallied toward the catch
 
 function makeLoose() {
   const rect = btnNo.getBoundingClientRect();
+  // Leave a same-sized placeholder in the flex row so the "yes" button
+  // keeps its position instead of recentering once "no" goes free-floating.
+  const ph = document.createElement("span");
+  ph.style.display = "inline-block";
+  ph.style.width = rect.width + "px";
+  ph.style.height = rect.height + "px";
+  btnNo.parentNode.insertBefore(ph, btnNo);
+
   btnNo.classList.add("is-loose");
   btnNo.style.left = rect.left + "px";
   btnNo.style.top  = rect.top + "px";
 }
 
-function dodge() {
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+function rectsOverlap(x, y, w, h, r) {
+  return x < r.right && x + w > r.left && y < r.bottom && y + h > r.top;
+}
+
+/* the main heading, padded — the button must never land here */
+function headingZone() {
+  const r = heading.getBoundingClientRect();
+  const m = 30;
+  return { left: r.left - m, top: r.top - m, right: r.right + m, bottom: r.bottom + m };
+}
+
+/* pick a spot that flees away from (px,py), stays on-screen and clears the heading */
+function fleeSpot(px, py) {
+  const w = btnNo.offsetWidth;
+  const h = btnNo.offsetHeight;
+  const pad = 16;
+  const maxX = Math.max(pad, window.innerWidth  - w - pad);
+  const maxY = Math.max(pad, window.innerHeight - h - pad);
+
+  const rect = btnNo.getBoundingClientRect();
+  const bx = rect.left + rect.width / 2;
+  const by = rect.top + rect.height / 2;
+
+  const base = Math.atan2(by - py, bx - px); // straight away from the cursor
+  const flee = 240;                          // leap distance — keeps it fast
+  const minGap = 170;                        // keep at least this clear of cursor
+  const zone = headingZone();
+
+  // Prefer the natural flee direction; peel sideways only if that spot is
+  // off-screen or on the heading, so it slides along walls instead of cornering.
+  const offsets = [0, 0.55, -0.55, 1.15, -1.15, 1.9, -1.9, Math.PI];
+  let fallback = null;
+  let fallbackDist = -1;
+
+  for (const off of offsets) {
+    const a = base + off;
+    const x = clamp(bx + Math.cos(a) * flee - w / 2, pad, maxX);
+    const y = clamp(by + Math.sin(a) * flee - h / 2, pad, maxY);
+    if (rectsOverlap(x, y, w, h, zone)) continue;
+    const dist = Math.hypot(x + w / 2 - px, y + h / 2 - py);
+    if (dist > fallbackDist) { fallbackDist = dist; fallback = { x, y }; }
+    if (dist >= minGap) return { x, y };
+  }
+  return fallback || { x: clamp(bx - w / 2, pad, maxX), y: clamp(by - h / 2, pad, maxY) };
+}
+
+function dodge(px, py) {
   if (caught) return;
   if (!btnNo.classList.contains("is-loose")) makeLoose();
 
-  dodges++;
-  taunt.textContent = taunts[Math.min(dodges - 1, taunts.length - 1)];
+  const spot = fleeSpot(px, py);
+  btnNo.style.left = spot.x + "px";
+  btnNo.style.top  = spot.y + "px";
 
-  const pad = 16;
-  const w = btnNo.offsetWidth;
-  const h = btnNo.offsetHeight;
-  const maxX = Math.max(pad, window.innerWidth  - w - pad);
-  const maxY = Math.max(pad, window.innerHeight - h - pad);
-  const x = pad + Math.random() * (maxX - pad);
-  const y = pad + Math.random() * (maxY - pad);
-  btnNo.style.left = x + "px";
-  btnNo.style.top  = y + "px";
-
-  if (dodges >= DODGES_TO_CATCH) catchIt();
+  // Movement is continuous, but one lunge should only count as one dodge.
+  const now = performance.now();
+  if (now - lastCount > 140) {
+    lastCount = now;
+    dodges++;
+    if (dodges >= DODGES_TO_CATCH) catchIt();
+  }
 }
 
 function catchIt() {
   caught = true;
   btnNo.classList.add("is-caught");
-  taunt.textContent = "no dobře, chytils mě. tak klikni.";
+  taunt.textContent = "tak jo no";
 }
 
-/* desktop: dodge when the cursor gets close */
+/* desktop: flee when the cursor gets close */
 document.addEventListener("pointermove", (e) => {
   if (caught || e.pointerType !== "mouse") return;
   const rect = btnNo.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-  const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
-  if (dist < 95) dodge();
+  if (Math.hypot(e.clientX - cx, e.clientY - cy) < 110) dodge(e.clientX, e.clientY);
 });
 
 /* mobile: a tap counts as a chase attempt until caught */
@@ -94,7 +143,8 @@ btnNo.addEventListener(
   (e) => {
     if (caught) return; // let the real click through
     e.preventDefault();
-    dodge();
+    const t = e.touches[0] || e.changedTouches[0];
+    dodge(t ? t.clientX : 0, t ? t.clientY : 0);
   },
   { passive: false }
 );
@@ -104,14 +154,16 @@ btnNo.addEventListener(
    ============================================================ */
 btnYes.addEventListener("click", () => {
   choice = "yes";
-  nameHeading.textContent = "tak jak ti budem řvát v cíli?";
+  nameHeading.textContent = "jak se jmenuješ?";
+  submitBtn.textContent = "jdu do toho";
   goToName();
 });
 
 btnNo.addEventListener("click", () => {
   if (!caught) return; // ignore clicks while it's still dodging
   choice = "no-but-caught";
-  nameHeading.textContent = "věděli jsme to. jméno?";
+  nameHeading.textContent = "Bylo nám to jasný... jméno?";
+  submitBtn.textContent = "sorry no";
   goToName();
 });
 
@@ -185,11 +237,13 @@ function showDone(name) {
   screenName.classList.add("is-hidden");
   screenDone.classList.remove("is-hidden");
   const first = name.split(/\s+/)[0];
-  doneHeading.textContent = `${first}, jsi na startovce.`;
-  doneSub.textContent =
-    choice === "no-but-caught"
-      ? "útěk se nekonal. uvidíme se u prvního piva."
-      : "uvidíme se u prvního piva. 🍺";
+  if (choice === "no-but-caught") {
+    doneHeading.textContent = `${first}, snad příští ročník.`;
+    doneSub.textContent = "";
+  } else {
+    doneHeading.textContent = `${first}, jsi na startovce.`;
+    doneSub.textContent = "Připravíme pro tebe Zubrowku 🍯";
+  }
 }
 
 /* keep the loose "no" button on-screen if the window resizes */
