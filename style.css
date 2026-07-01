@@ -1,0 +1,215 @@
+:root {
+  --ink: #f3f1e9;      /* warm off-white, like the poster type */
+  --paper: #0a0a0a;    /* near-black background */
+  --paper-2: #141414;
+  --muted: #8f8d86;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Archivo", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ------- grain overlay ------- */
+.grain {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 100;
+  mix-blend-mode: screen;
+}
+
+/* ------- layout ------- */
+.stage {
+  position: relative;
+  height: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  padding: clamp(1.25rem, 4vw, 3rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* corner meta block */
+.meta {
+  position: absolute;
+  top: clamp(1.25rem, 4vw, 3rem);
+  right: clamp(1.25rem, 4vw, 3rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-weight: 700;
+  font-size: clamp(0.8rem, 1.6vw, 1.05rem);
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  text-transform: lowercase;
+  z-index: 3;
+}
+
+/* giant background wordmark */
+.wordmark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(0.5rem, 2vw, 2rem) 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.wordmark__top,
+.wordmark__bottom {
+  display: block;
+  font-weight: 900;
+  line-height: 0.78;
+  letter-spacing: -0.04em;
+  text-transform: lowercase;
+  white-space: nowrap;
+  opacity: 0.09;
+}
+.wordmark__top {
+  font-size: clamp(6rem, 34vw, 30rem);
+  margin-left: -0.04em;
+}
+.wordmark__bottom {
+  font-size: clamp(7rem, 40vw, 34rem);
+  align-self: flex-end;
+  margin-right: -0.02em;
+}
+
+/* ------- screens ------- */
+.screen {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 900px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 2.75rem);
+}
+.is-hidden { display: none !important; }
+
+.prompt {
+  margin: 0;
+  font-weight: 900;
+  font-size: clamp(2.75rem, 11vw, 8rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  text-transform: lowercase;
+}
+.prompt--sm {
+  font-size: clamp(1.75rem, 6vw, 4rem);
+}
+
+.done-sub {
+  margin: 0;
+  font-size: clamp(1rem, 2.4vw, 1.5rem);
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* ------- buttons ------- */
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  justify-content: center;
+  align-items: center;
+}
+
+.btn {
+  font-family: inherit;
+  font-weight: 900;
+  text-transform: lowercase;
+  letter-spacing: -0.02em;
+  font-size: clamp(1.1rem, 2.6vw, 1.6rem);
+  padding: 0.7em 1.4em;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.96); }
+
+.btn--yes {
+  background: var(--ink);
+  color: var(--paper);
+}
+.btn--yes:hover {
+  background: #fff;
+  border-color: #fff;
+}
+
+.btn--no {
+  background: transparent;
+  color: var(--ink);
+}
+/* the evasive button becomes free-floating when it starts dodging */
+.btn--no.is-loose {
+  position: fixed;
+  z-index: 50;
+  margin: 0;
+  transition: left 0.12s cubic-bezier(0.22, 1, 0.36, 1),
+              top 0.12s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.08s ease;
+}
+.btn--no.is-caught {
+  border-style: dashed;
+  opacity: 0.85;
+}
+
+/* ------- name entry ------- */
+.name-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  width: 100%;
+}
+.name-input {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: clamp(1.1rem, 2.6vw, 1.6rem);
+  padding: 0.6em 1em;
+  min-width: min(360px, 80vw);
+  color: var(--ink);
+  background: var(--paper-2);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  text-align: center;
+  outline: none;
+}
+.name-input::placeholder { color: var(--muted); }
+.name-input:focus { background: #1c1c1c; }
+
+.taunt, .err {
+  margin: 0;
+  min-height: 1.5em;
+  font-weight: 700;
+  font-size: clamp(0.95rem, 2vw, 1.2rem);
+  color: var(--muted);
+}
+.err { color: #ff6b5e; }
+
+.btn[disabled] { opacity: 0.5; cursor: wait; }
+
+@media (max-width: 520px) {
+  .meta { font-size: 0.72rem; }
+}
