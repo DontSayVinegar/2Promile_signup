@@ -8,7 +8,7 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywwihkau8iVyelj_-Bpf9_vBuPwMO0FZT3c0bzZXWiu3z8UBWfL07uqIfES4doZ6s8/exec";
 
 /* how many times the "no" button dodges before it lets itself be caught */
-const DODGES_TO_CATCH = 6;
+const DODGES_TO_CATCH = 4;
 
 /* ---------- element refs ---------- */
 const screenAsk  = document.getElementById("screen-ask");
